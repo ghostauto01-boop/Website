@@ -49,9 +49,9 @@ The step is idempotent — already-processed files are skipped on re-runs.
 ### Optional: GitHub Actions auto-sync
 
 `ci/sync-media.yml` contains a ready-made workflow that syncs the Drive folders on
-every push and commits the optimized media into the repo. Move it to
-`.github/workflows/sync-media.yml` to enable (requires a token/App with the
-**Workflows** permission).
+every push and commits the optimized media into the repo. The Arena GitHub App
+cannot push workflow files, so install it once via the GitHub web UI —
+see **[INSTALL-SYNC-WORKFLOW.md](INSTALL-SYNC-WORKFLOW.md)** (2 minutes).
 
 ## Structure
 
