@@ -77,7 +77,7 @@
     return `
     <article class="vcard reveal" data-src="${esc(v.src)}" data-title="${esc(v.title)}" data-meta="${esc(v.meta)}">
       <div class="vc-media">
-        ${v.poster ? `<img src="${esc(v.poster)}" alt="${esc(v.title)} — ${esc(v.chip)} campaign still" loading="lazy">` : ""}
+        <video class="loopview" src="${esc(v.src)}" poster="${esc(v.poster || "")}" muted loop playsinline preload="metadata" aria-label="${esc(v.title)} preview loop"></video>
         <div class="vc-grad"></div>
         <span class="vc-chip">${esc(v.chip)}</span>
         <div class="vc-info">
@@ -117,21 +117,22 @@
     else v.pause();
   }), { threshold: 0.25 });
 
+  function watchLoops(root) { $$("video.loopview", root).forEach((v) => phoneIO.observe(v)); }
+
   function loopingPhone(v, title) {
     return `
       <div class="ph" data-src="${esc(v.src)}" data-title="${esc(title || v.title)}" tabindex="0" role="button" aria-label="Play ${esc(title || v.title)}">
-        <video src="${esc(v.src)}" poster="${esc(v.poster || "")}" muted loop playsinline preload="metadata"></video>
+        <video class="loopview" src="${esc(v.src)}" poster="${esc(v.poster || "")}" muted loop playsinline preload="metadata"></video>
         <div class="ph-tag"><span>${esc(title || v.title)}</span><i>${esc(v.chip || "")}</i></div>
       </div>`;
   }
   function bindPhones(root) {
     $$(".ph", root).forEach((ph) => {
-      const v = $("video", ph);
-      if (v) phoneIO.observe(v);
       const open = () => openModal(ph.dataset.src, ph.dataset.title);
       ph.addEventListener("click", open);
       ph.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && open());
     });
+    watchLoops(root);
   }
 
   function renderHome() {
@@ -193,8 +194,8 @@
     const caseVid = VID("perfume", 2) || VID("jewelry", 0) || VID("streetwear", 0);
     const cp = $("#case-phone");
     if (cp && caseVid) {
-      cp.innerHTML = `<video src="${esc(caseVid.src)}" poster="${esc(caseVid.poster || "")}" muted loop playsinline preload="metadata" aria-label="Case study campaign loop"></video>`;
-      phoneIO.observe($("video", cp));
+      cp.innerHTML = `<video class="loopview" src="${esc(caseVid.src)}" poster="${esc(caseVid.poster || "")}" muted loop playsinline preload="metadata" aria-label="Case study campaign loop"></video>`;
+      watchLoops(cp);
     }
 
     /* niche pills */
@@ -276,6 +277,7 @@
         ? list.map(cardHTML).join("")
         : `<div class="media-error">Campaign videos are being prepared — they appear automatically once the site is built on Netlify.</div>`;
       bindCards(grid);
+      watchLoops(grid);
       $$(".reveal", grid).forEach((el) => io.observe(el));
     }
     const gal = $("#gallery-grid");

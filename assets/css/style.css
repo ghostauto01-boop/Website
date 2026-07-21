@@ -430,8 +430,8 @@ body.menu-open .mobile-menu { transform: none; opacity: 1; visibility: visible; 
 }
 .vcard:hover { transform: translateY(-4px); box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.6); }
 .vcard .vc-media { position: relative; aspect-ratio: 3 / 3.8; overflow: hidden; background: var(--cream-2); }
-.vcard .vc-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.19, 0.6, 0.2, 1); }
-.vcard:hover .vc-media img { transform: scale(1.05); }
+.vcard .vc-media img, .vcard .vc-media video { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.19, 0.6, 0.2, 1); }
+.vcard:hover .vc-media img, .vcard:hover .vc-media video { transform: scale(1.05); }
 .vcard .vc-grad { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.55)); }
 .vc-chip {
   position: absolute; top: 12px; left: 12px; z-index: 2;

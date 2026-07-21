@@ -20,12 +20,13 @@ PY=$(command -v python3 || command -v python)
 if ! command -v ffmpeg >/dev/null 2>&1; then
   echo "[build] ffmpeg not found — fetching static build..."
   mkdir -p /tmp/ffx
-  curl -fsSL "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz" -o /tmp/ffx/ffmpeg.tar.xz
+  curl -fsSL "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz" -o /tmp/ffx/ffmpeg.tar.xz \
+    || curl -fsSL "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz" -o /tmp/ffx/ffmpeg.tar.xz
   tar -xJf /tmp/ffx/ffmpeg.tar.xz -C /tmp/ffx
   FF_DIR=$(dirname "$(find /tmp/ffx -name ffmpeg -type f | head -1)")
   export PATH="$FF_DIR:$PATH"
 fi
-ffmpeg -version | head -1
+ffmpeg -version | head -1 || echo "[build] WARNING: ffmpeg unavailable"
 
 "$PY" scripts/sync_media.py
 STATUS=$?
