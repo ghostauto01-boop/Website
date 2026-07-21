@@ -230,6 +230,71 @@ window.CBM = {
     successAttach: "Please attach your product photos to the email and hit Send!",
   },
 
+  /* ---------------- editorial homepage boards ---------------- */
+  homeLayout: {
+    roles: "Ad Creative Studio | Motion Design ✦ Cinematic Campaigns",
+    contactLine: "webwizardmarketingagency@gmail.com · WhatsApp +234 816 480 2777 · Worldwide — Remote",
+    trustedLine: "Trusted by 50+ brands scaled",
+    who: {
+      title1: "WHAT",
+      title2: "We Do",
+      body1:
+        "CREATEBYMOH is a cinematic motion design studio. We hand-craft bespoke 10–15s vertical ad campaigns for perfume, streetwear and fine jewelry brands — sensory worlds in motion built to stop the scroll.",
+      body2:
+        "Every frame is art-directed around your product's physical reality: liquid viscosity, fabric weight, mirror finishes. The result feels less like an ad and more like a miniature film.",
+    },
+    caseStudy: {
+      title: "Case STUDY 1",
+      line: "Aggregate campaign results across our niche portfolio",
+      body:
+        "Crafted end-to-end ad creatives covering concept development, art direction and native vertical execution for fragrance, streetwear and jewelry brands scaling on paid social.",
+      stats: ["20M+ campaign views", "$15M+ tracked revenue", "50+ brands scaled"],
+    },
+    nicheBoard: {
+      title1: "MY Niche &",
+      title2: "SPECIALITIES",
+      leftPills: ["UGC Ad Videos", "Product-focused Ads", "Product Review Ads", "Unboxing Style", "Lifestyle & Aesthetic Ads"],
+      rightPills: ["Perfume & Fragrance", "Streetwear Clothing", "Fine Jewelry", "Cosmetics & Skincare", "Watches & Accessories"],
+    },
+    rates: [
+      {
+        title: "UGC-Style Video + Art Direction",
+        desc: "10–15s vertical campaign loops with native cinematic transitions — staged lighting, tactile macro passes and hook-first pacing, platform-ready for TikTok, Reels and Shorts.",
+        list: ["Lifestyle & sensory videos", "Seamless transition cuts", "Cinematic 3D panning", "Hook copy + captions", "Muted native loops"],
+        cta: "Free mockup in 48h",
+      },
+      {
+        title: "Campaign Creative Kit",
+        desc: "Everything a brand needs to ship a month of premium ads — concept boards, hero frames and a reusable motion language tuned to your product materials.",
+        list: ["Concept art direction boards", "Product photography frames", "3–10s cutdown variations", "Unlimited revisions", "Delivery via Drive & email"],
+        cta: "Free mockup in 48h",
+      },
+    ],
+    howSteps: [
+      { n: "1", t: "Send a 2-minute brief", d: "Tell us about your brand vision and goals over the form or a WhatsApp chat — we'll help you figure out what type of content will hit best with your audience." },
+      { n: "2", t: "Strategy & creative direction", d: "Once we lock in the concept and materials, we plan the shoot: styling, light, textures and camera paths designed to make your product irresistible on screen." },
+      { n: "3", t: "Content delivery & usage", d: "Your final creative lands in 48 hours via Google Drive — polished, loop-ready and formatted for whatever platform you run your ads on." },
+    ],
+  },
+
+  testimonials: [
+    {
+      name: "Fragrance Brand Partner",
+      img: { niche: "perfume", index: 0 },
+      quote: "CREATEBYMOH's content brought real energy to our launch. The pacing, the light, the macro bottle reveals — every frame matched the brand perfectly. The 15s cut became our best-performing ad.",
+    },
+    {
+      name: "Streetwear Label Owner",
+      img: { niche: "streetwear", index: 0 },
+      quote: "The fabric really does feel heavy on camera. Customers kept asking what the hoodie was made of after seeing the motion set — it looked exactly like our brand feels in person.",
+    },
+    {
+      name: "Jewelry Boutique Founder",
+      img: { niche: "jewelry", index: 0 },
+      quote: "Loved how the gold was staged against dark stone — effortless and premium. The loops showed every detail while keeping that raw, stylish and authentic edge we wanted.",
+    },
+  ],
+
   nicheOptions: [
     "Perfume & Fragrance",
     "Streetwear Clothing",

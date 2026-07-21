@@ -104,32 +104,167 @@
     return list[i] || null;
   }
 
-  function renderHome() {
-    const grid = $("#home-grid");
-    if (!grid) return;
-    const usedSrcs = new Set();
-    const cards = [];
-    D.homeShowcase.forEach((c) => {
-      const v = pickVideo(c.niche, c.pick);
-      if (!v || usedSrcs.has(v.src)) return;
-      usedSrcs.add(v.src);
-      cards.push(cardHTML(Object.assign({}, v, { title: c.title, meta: c.meta, desc: c.desc })));
-    });
-    grid.innerHTML = cards.length
-      ? cards.join("")
-      : `<div class="media-error">Campaign media is being prepared — it appears automatically once the site is built on Netlify.</div>`;
+  const IMG = (slug, i) => {
+    const imgs = (state.manifest && state.manifest[slug] && state.manifest[slug].images) || [];
+    return imgs.length ? imgs[i % imgs.length] : null;
+  };
+  const VID = (slug, i) => { const l = state[slug] || []; return l.length ? l[Math.min(i, l.length - 1)] : null; };
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    /* hero phone showcase = first curated video */
-    const pv = pickVideo("perfume", { type: "index", value: 0 });
-    const screen = $("#hero-phone-screen");
-    if (screen && pv) {
-      screen.innerHTML = `
-        <video src="${esc(pv.src)}" poster="${esc(pv.poster || "")}" muted loop playsinline
-               autoplay preload="metadata" aria-label="CREATEBYMOH perfume campaign loop"></video>
-        ${tiktokOverlay()}`;
+  const phoneIO = new IntersectionObserver((es) => es.forEach((e) => {
+    const v = e.target;
+    if (e.isIntersecting && !reduced) v.play().catch(() => {});
+    else v.pause();
+  }), { threshold: 0.25 });
+
+  function loopingPhone(v, title) {
+    return `
+      <div class="ph" data-src="${esc(v.src)}" data-title="${esc(title || v.title)}" tabindex="0" role="button" aria-label="Play ${esc(title || v.title)}">
+        <video src="${esc(v.src)}" poster="${esc(v.poster || "")}" muted loop playsinline preload="metadata"></video>
+        <div class="ph-tag"><span>${esc(title || v.title)}</span><i>${esc(v.chip || "")}</i></div>
+      </div>`;
+  }
+  function bindPhones(root) {
+    $$(".ph", root).forEach((ph) => {
+      const v = $("video", ph);
+      if (v) phoneIO.observe(v);
+      const open = () => openModal(ph.dataset.src, ph.dataset.title);
+      ph.addEventListener("click", open);
+      ph.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && open());
+    });
+  }
+
+  function renderHome() {
+    const L = D.homeLayout;
+    const hasMedia = !!state.manifest;
+
+    /* hero collage */
+    if (hasMedia) {
+      const main = IMG("perfume", 1) || IMG("streetwear", 0) || IMG("jewelry", 0);
+      const side = IMG("streetwear", 0) || IMG("jewelry", 2);
+      const col = $("#hero-collage");
+      if (col && main) col.innerHTML = `
+        <div>
+          <div class="collage-frame tall"><img src="${esc(main.src)}" alt="CREATEBYMOH campaign hero frame"></div>
+          <div class="collage-cap">Campaign Still ✦ CreateByMoh</div>
+        </div>
+        <div>
+          ${side ? `<div class="collage-frame short"><img src="${esc(side.src)}" alt="Campaign detail frame"></div>` : ""}
+          <div class="collage-frame short ghost" style="margin-top:12px">Sensory worlds<br>in motion ✦</div>
+        </div>`;
     }
-    bindCards(grid);
-    $$(".reveal", grid).forEach((el) => io.observe(el));
+
+    /* rates & services */
+    const rates = $("#rates-grid");
+    if (rates) rates.innerHTML = L.rates.map((r) => `
+      <div class="rate-card reveal">
+        <h3>${esc(r.title)}</h3><p>${esc(r.desc)}</p>
+        <ul>${r.list.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>
+        <div class="rc-cta">${esc(r.cta)} ➔</div>
+      </div>`).join("");
+
+    /* how it works */
+    const how = $("#how-grid");
+    if (how) how.innerHTML = L.howSteps.map((s) => `
+      <div class="how-step reveal">
+        <span class="hs-num">${esc(s.n)}</span>
+        <h3>${esc(s.t)}</h3><p>${esc(s.d)}</p>
+      </div>`).join("");
+
+    /* who we are image */
+    const whoImg = IMG("streetwear", 1) || IMG("perfume", 3) || IMG("jewelry", 1);
+    const whoEl = $("#who-img");
+    if (whoEl) {
+      if (whoImg) whoEl.innerHTML = `<img src="${esc(whoImg.src)}" alt="CREATEBYMOH art direction — studio frame">`;
+      else whoEl.style.display = "none";
+    }
+
+    /* analytics board image */
+    const anaImg = IMG("jewelry", 3) || IMG("perfume", 5) || IMG("streetwear", 2);
+    const anaEl = $("#ana-img");
+    if (anaEl) {
+      if (anaImg) anaEl.innerHTML = `<img src="${esc(anaImg.src)}" alt="Campaign metrics board frame">`;
+      else anaEl.style.display = "none";
+    }
+
+    /* case study board */
+    const cs = $("#case-stats");
+    if (cs) cs.innerHTML = L.caseStudy.stats.map((s) => `<span>${esc(s)}</span>`).join("");
+    const caseVid = VID("perfume", 2) || VID("jewelry", 0) || VID("streetwear", 0);
+    const cp = $("#case-phone");
+    if (cp && caseVid) {
+      cp.innerHTML = `<video src="${esc(caseVid.src)}" poster="${esc(caseVid.poster || "")}" muted loop playsinline preload="metadata" aria-label="Case study campaign loop"></video>`;
+      phoneIO.observe($("video", cp));
+    }
+
+    /* niche pills */
+    const nl = $("#niche-left");
+    if (nl) nl.innerHTML = L.nicheBoard.leftPills.map((p) => `<span class="pill-x">${esc(p)}</span>`).join("");
+    const nr = $("#niche-right");
+    if (nr) {
+      const links = ["perfume", "streetwear", "jewelry"];
+      nr.innerHTML = L.nicheBoard.rightPills.map((p, i) =>
+        links[i]
+          ? `<a href="${D.niches[links[i]].page}">${esc(p)}</a>`
+          : `<a href="#brief">${esc(p)}</a>`).join("");
+    }
+
+    /* recent videography phones */
+    const strip = $("#phone-strip");
+    if (strip) {
+      const picks = [
+        ["perfume", 0], ["streetwear_kw", 0], ["jewelry", 0], ["streetwear", 3],
+      ];
+      const phones = [];
+      picks.forEach((p) => {
+        let v;
+        if (p[0].endsWith("_kw")) v = pickVideo(p[0].slice(0, -3), { type: "keyword", value: "shirt_swap" });
+        else v = VID(p[0], p[1]);
+        if (v && !phones.some((x) => x.src === v.src)) phones.push(v);
+      });
+      strip.innerHTML = phones.length
+        ? phones.map((v) => loopingPhone(v)).join("")
+        : `<div class="media-error">Campaign videos appear here after the first Netlify build pulls your Drive content.</div>`;
+      bindPhones(strip);
+    }
+
+    /* photography snapshot — mixed interleave */
+    const snap = $("#snap-grid");
+    if (snap) {
+      const order = ["perfume", "streetwear", "jewelry"];
+      const imgs = order.map((s) => ((state.manifest && state.manifest[s] && state.manifest[s].images) || []));
+      const out = [];
+      for (let i = 0; out.length < 12; i++) {
+        let added = 0;
+        order.forEach((s, k) => { if (imgs[k] && imgs[k][i]) { out.push({ slug: s, im: imgs[k][i], n: i }); added++; } });
+        if (!added) break;
+      }
+      snap.innerHTML = out.length
+        ? out.map((o) => `
+          <figure class="shot snap" data-full="${esc(o.im.src)}" tabindex="0" role="button" aria-label="Open ${o.slug} photography snapshot full size">
+            <img src="${esc(o.im.src)}" alt="${o.slug} photography snapshot ${o.n + 1}" loading="lazy">
+          </figure>`).join("")
+        : `<div class="media-error">Photography snapshots appear here after the first Netlify build pulls your Drive content.</div>`;
+      bindGallery(snap);
+    }
+
+    /* analytics pills */
+    const mp = $("#metric-pills");
+    if (mp) mp.innerHTML = D.brand.stats.map((s) => `<span class="mp"><b>${esc(s.label)}</b>${esc(s.n)}</span>`).join("");
+
+    /* testimonials */
+    const tg = $("#testi-grid");
+    if (tg) tg.innerHTML = D.testimonials.map((t) => {
+      const im = hasMedia ? IMG(t.img.niche, t.img.index) : null;
+      return `
+      <div class="testi-card reveal">
+        ${im ? `<div class="tc-img"><img src="${esc(im.src)}" alt="${esc(t.name)} campaign frame" loading="lazy"></div>` : ""}
+        <span class="tc-name">${esc(t.name)}</span>
+        <p>${esc(t.quote)}</p>
+      </div>`;
+    }).join("");
+
+    $$(".reveal", $("#page-root") || document).forEach((el) => io.observe(el));
   }
 
   function renderNiche(slug) {
