@@ -1,0 +1,7 @@
+# temp downloads from Drive sync (raw originals are not committed)
+/raw-drive/
+
+# os / editor noise
+.DS_Store
+Thumbs.db
+node_modules/
