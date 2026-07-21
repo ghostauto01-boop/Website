@@ -1,5 +1,7 @@
 name: Sync Drive media
 
+# Move this file to .github/workflows/sync-media.yml to enable the auto-sync
+# (requires a GitHub App/token with the "Workflows" permission).
 on:
   push:
     branches: [arena/019f850c-website]

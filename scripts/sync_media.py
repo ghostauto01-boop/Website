@@ -29,7 +29,7 @@ FOLDERS = {
 }
 VIDEO_EXT = {".mp4", ".mov", ".m4v", ".webm", ".avi", ".mkv"}
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".heic", ".bmp", ".gif"}
-RAW_DIR = "raw-drive"
+RAW_DIR = os.environ.get("RAW_DIR", "raw-drive")
 OUT_DIR = os.path.join("assets", "media")
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"}

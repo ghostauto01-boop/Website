@@ -1,0 +1,40 @@
+# CREATEBYMOH — static portfolio deploy config
+[build]
+  command = "bash scripts/build_site.sh"
+  publish = "."
+
+[[redirects]]
+  from = "/perfumes"
+  to = "/perfumes/"
+  status = 301
+
+[[redirects]]
+  from = "/streetwear"
+  to = "/streetwear/"
+  status = 301
+
+[[redirects]]
+  from = "/jewelry"
+  to = "/jewelry/"
+  status = 301
+
+[[redirects]]
+  from = "/how-we-work"
+  to = "/how-we-work/"
+  status = 301
+
+[[redirects]]
+  from = "/about"
+  to = "/about/"
+  status = 301
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
