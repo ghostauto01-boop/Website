@@ -164,14 +164,62 @@ def download_one(fid, dest, attempts=3):
     return False, last_err
 
 
+FF = shutil.which("ffmpeg")
+FFPROBE = shutil.which("ffprobe")
+
+
+def ensure_ffmpeg():
+    """Guarantee working ffmpeg/ffprobe (download a static build if absent)."""
+    global FF, FFPROBE
+    if FF and FFPROBE:
+        return
+    import glob
+    import tarfile
+    dl = "/tmp/ffmpeg-static"
+    os.makedirs(dl, exist_ok=True)
+    tar = os.path.join(dl, "ffmpeg.tar.xz")
+    found = glob.glob(os.path.join(dl, "**", "ffmpeg"), recursive=True)
+    if not found:
+        urls = [
+            "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz",
+            "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz",
+        ]
+        last = None
+        for u in urls:
+            try:
+                with http_get(u, timeout=900) as r, open(tar, "wb") as f:
+                    while True:
+                        c = r.read(1 << 22)
+                        if not c:
+                            break
+                        f.write(c)
+                last = None
+                break
+            except Exception as e:
+                last = e
+        if last is not None:
+            raise RuntimeError(f"could not download static ffmpeg: {last!r}")
+        with tarfile.open(tar) as t:
+            t.extractall(dl, filter="data")
+    ff = next(iter(glob.glob(os.path.join(dl, "**", "ffmpeg"), recursive=True)), None)
+    fp = next(iter(glob.glob(os.path.join(dl, "**", "ffprobe"), recursive=True)), None)
+    if not (ff and fp):
+        raise RuntimeError("static ffmpeg extraction failed")
+    os.chmod(ff, 0o755)
+    os.chmod(fp, 0o755)
+    FF, FFPROBE = ff, fp
+    REPORT["ffmpeg"] = ff
+
+
 def run_ff(cmd):
+    cmd = [FF if cmd[0] == "ffmpeg" else cmd[0]] + cmd[1:]
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def probe_video(path):
     try:
         out = subprocess.run(
-            ["ffprobe", "-v", "quiet", "-print_format", "json",
+            [FFPROBE or "ffprobe", "-v", "quiet", "-print_format", "json",
              "-show_entries", "format=duration",
              "-show_entries", "stream=width,height", path],
             capture_output=True, text=True, check=True).stdout
@@ -290,6 +338,7 @@ def collect_raw(niche, folder_id, niche_raw):
 def main():
     manifest = {}
     os.makedirs(OUT_DIR, exist_ok=True)
+    ensure_ffmpeg()
     for niche, folder_id in FOLDERS.items():
         niche_raw = os.path.join(RAW_DIR, niche)
         vout = os.path.join(OUT_DIR, niche, "videos")
