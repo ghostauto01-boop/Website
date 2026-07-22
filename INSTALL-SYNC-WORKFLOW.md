@@ -1,7 +1,7 @@
 # One-time setup: activate the Drive media auto-sync (~2 minutes)
 
 This adds **one file** through the GitHub website so GitHub can download all
-71 campaign videos/images from your three Google Drive folders, optimize them
+106 campaign videos/images from your three Google Drive folders, optimize them
 for the web, and commit them into this repo at `assets/media/` — permanently.
 Your Netlify deploy will then be instant (no build-time downloading).
 
