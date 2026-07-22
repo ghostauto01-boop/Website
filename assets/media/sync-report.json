@@ -26,8 +26,8 @@
       }
     }
   },
-  "started": "2026-07-22T08:52:39Z",
-  "ffmpeg": "/tmp/ffmpeg-static/ffmpeg-7.0.2-amd64-static/ffmpeg",
+  "started": "2026-07-22T09:41:22Z",
+  "ffmpeg": "imageio-ffmpeg:/opt/hostedtoolcache/Python/3.14.6/x64/lib/python3.14/site-packages/imageio_ffmpeg/binaries/ffmpeg-linux-x86_64-v7.0.2",
   "total_processed": 106,
-  "finished": "2026-07-22T08:55:06Z"
+  "finished": "2026-07-22T09:48:09Z"
 }
