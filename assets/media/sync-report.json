@@ -4,80 +4,30 @@
     "jewelry": {
       "index_entries": 24,
       "collected": 24,
-      "process_failures": [
-        "34a542cc1c1705ffb83133412708dfbe.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "7fdcf0d9fcc25da1b43834c6271863af_720w.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "854d344c9b002ffbde7fe6b98237f504.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "acf9ac4fac2fdbb772cdc316f7276f3b.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "e2ea3f96f40e4af12fdd0b1c5d8e411d_720w.mp4: FileNotFoundError(2, 'No such file or directory')"
-      ],
       "done": {
-        "videos": 0,
+        "videos": 5,
         "images": 19
       }
     },
     "perfume": {
       "index_entries": 35,
       "collected": 35,
-      "process_failures": [
-        "copy_5C186556-1542-4813-B99C-D45FBD45997E.mov: FileNotFoundError(2, 'No such file or directory')",
-        "Dream_Screen_03Jul2026_11_44_02.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "Dream_Screen_03Jul2026_11_46_24.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "Dream_Screen_03Jul2026_16_38_25.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "Dream_Screen_04Jul2026_13_07_04.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "Dream_Screen_04Jul2026_13_08_31.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "Dream_Screen_04Jul2026_13_11_54.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "Dream_Screen_04Jul2026_13_13_43.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "O_NAYA_Eau_de_Parfum_Hero_Film-1783003228672.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "VID_20260702160510230.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "VID_20260702161734119.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "VID_20260703115418003.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "VID_20260703120332473.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "VID_20260703164243717.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "VID_20260703164511811.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "VID_20260710123801715.mp4: FileNotFoundError(2, 'No such file or directory')"
-      ],
       "done": {
-        "videos": 0,
+        "videos": 16,
         "images": 19
       }
     },
     "streetwear": {
       "index_entries": 47,
       "collected": 47,
-      "process_failures": [
-        "12cf7d9d7fe5a4cc69c23f09299ed693_720w.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "29a8a4843809d3c9b5c6c4a4a6f42e02.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "59a4f0b9a0796a823afb9cde3193a6b3.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "b6e342057cabf9d8914b03946598d719_720w_mov-1781963046710.mov: FileNotFoundError(2, 'No such file or directory')",
-        "copy_1786643A-647D-4E60-BC04-83D2465E3FBE.mov: FileNotFoundError(2, 'No such file or directory')",
-        "copy_2482BC02-ADE7-462B-9EFA-45FE0DAD78AF.mov: FileNotFoundError(2, 'No such file or directory')",
-        "copy_27857B4C-7FA2-4332-B3FE-0B0B96F5956B.mov: FileNotFoundError(2, 'No such file or directory')",
-        "copy_5EC87476-2265-4B62-8F56-8834E48922B0.mov: FileNotFoundError(2, 'No such file or directory')",
-        "copy_86A656F3-92DC-434F-B3BE-C2FFC25F1965.mov: FileNotFoundError(2, 'No such file or directory')",
-        "copy_B2AE3828-1CAE-4E8D-AB8C-04757E56C084.mov: FileNotFoundError(2, 'No such file or directory')",
-        "Create_tracksuit_look_book_video_202606151153.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "dc403c91f47d25dc7f584a9d19804cfe.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "export_1781778056455.mov: FileNotFoundError(2, 'No such file or directory')",
-        "export_1781963542921.mov: FileNotFoundError(2, 'No such file or directory')",
-        "export_1781963824988.mov: FileNotFoundError(2, 'No such file or directory')",
-        "Shirt_Swap_With_New_Floor_Design-1782074941551.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "Streetwear_fashion_video_campaign_202605300019.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "Tracksuit_look_book_video_202606151201.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "Tshirt_look_book_video_202606231428.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "v14044g50000d8jm0l7og65m25nq0tl0.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "v14044g50000d8jn95vog65gd6vf1qbg.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "v1c044g50000d8o04j7og65rd8cgkj3g.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "v1c044g50000d8rgo8vog65g48ihott0.mp4: FileNotFoundError(2, 'No such file or directory')",
-        "v1c044g50000d8rgqh7og65s2m791llg.mp4: FileNotFoundError(2, 'No such file or directory')"
-      ],
       "done": {
-        "videos": 0,
+        "videos": 24,
         "images": 23
       }
     }
   },
-  "started": "2026-07-22T08:41:17Z",
-  "total_processed": 61,
-  "finished": "2026-07-22T08:43:21Z"
+  "started": "2026-07-22T08:45:07Z",
+  "ffmpeg": "/tmp/ffmpeg-static/ffmpeg-7.0.2-amd64-static/ffmpeg",
+  "total_processed": 106,
+  "finished": "2026-07-22T08:51:11Z"
 }
