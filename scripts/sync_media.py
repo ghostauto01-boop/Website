@@ -10,14 +10,19 @@ Download engines (auto, in order):
   2. urllib + embeddedfolderview scraping (fallback)
 
 Outputs
-  Videos  -> assets/media/<niche>/videos/<niche>-XX.mp4  (h264, <=720w, muted)
-  Posters -> assets/media/<niche>/videos/<niche>-XX.jpg
+  Videos  -> assets/media/<niche>/videos/<niche>-XX.<hash>.mp4  (h264 CRF28, <=720w,
+             faststart, AAC 96k mono kept when the original has audio)
+  Posters -> assets/media/<niche>/videos/<niche>-XX.<hash>.webp
   Images  -> assets/media/<niche>/images/<niche>-XX.webp (<=1400px, q80)
   Manifest-> assets/manifest.json
   Report  -> assets/media/sync-report.json
 
+File names carry a content hash (of the raw source + codec settings) so they
+can be served with immutable cache headers without ever going stale.
+
 Exits 1 when NOTHING was processed so the workflow visibly fails.
 """
+import hashlib
 import html
 import json
 import os
@@ -38,6 +43,17 @@ VIDEO_EXT = {".mp4", ".mov", ".m4v", ".webm", ".avi", ".mkv"}
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif"}
 RAW_DIR = os.environ.get("RAW_DIR", "raw-drive")
 OUT_DIR = os.path.join("assets", "media")
+# Bump whenever encode settings change — renames every output, forcing refresh.
+CODEC_TAG = "v2-crf28-aac96-webposter"
+
+
+def raw_hash(path):
+    h = hashlib.md5()
+    h.update(CODEC_TAG.encode())
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()[:8]
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"}
 REPORT = {"engine": None, "niches": {}, "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
@@ -221,26 +237,31 @@ def probe_video(path):
         out = subprocess.run(
             [FFPROBE or "ffprobe", "-v", "quiet", "-print_format", "json",
              "-show_entries", "format=duration",
-             "-show_entries", "stream=width,height", path],
+             "-show_entries", "stream=width,height,codec_type", path],
             capture_output=True, text=True, check=True).stdout
         info = json.loads(out)
         dur = round(float(info.get("format", {}).get("duration", 0)))
-        st = next((s for s in info.get("streams", []) if s.get("width")), {})
-        return dur, st.get("width", 0), st.get("height", 0)
+        streams = info.get("streams", [])
+        st = next((s for s in streams if s.get("width")), {})
+        has_audio = any(s.get("codec_type") == "audio" for s in streams)
+        return dur, st.get("width", 0), st.get("height", 0), has_audio
     except Exception:
-        return 0, 0, 0
+        return 0, 0, 0, False
 
 
-def transcode(src, dest_mp4, dest_jpg):
+def transcode(src, dest_mp4, dest_webp):
     if not os.path.exists(dest_mp4):
         run_ff(["ffmpeg", "-y", "-i", src,
+                "-map", "0:v:0", "-map", "0:a?",
                 "-vf", "scale='min(720,iw)':'-2'",
-                "-c:v", "libx264", "-preset", "medium", "-crf", "26",
-                "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-                "-an", dest_mp4])
-    if not os.path.exists(dest_jpg):
+                "-c:v", "libx264", "-preset", "slow", "-crf", "28",
+                "-pix_fmt", "yuv420p",
+                "-c:a", "aac", "-b:a", "96k", "-ac", "1",
+                "-movflags", "+faststart", "-write_tmcd", "0", dest_mp4])
+    if not os.path.exists(dest_webp):
         run_ff(["ffmpeg", "-y", "-ss", "0.5", "-i", src,
-                "-frames:v", "1", "-q:v", "4", dest_jpg])
+                "-frames:v", "1", "-vf", "scale='min(540,iw)':'-2'",
+                "-c:v", "libwebp", "-quality", "78", dest_webp])
 
 
 def optimize_image(src, dest):
@@ -354,15 +375,16 @@ def main():
             try:
                 if ext in VIDEO_EXT:
                     vn += 1
-                    base = f"{niche}-{vn:02d}"
+                    base = f"{niche}-{vn:02d}.{raw_hash(raw)}"
                     mp4 = os.path.join(vout, base + ".mp4")
-                    jpg = os.path.join(vout, base + ".jpg")
-                    transcode(raw, mp4, jpg)
-                    dur, w, h = probe_video(mp4)
+                    webp = os.path.join(vout, base + ".webp")
+                    transcode(raw, mp4, webp)
+                    dur, w, h, has_audio = probe_video(mp4)
                     entry["videos"].append({
                         "src": f"assets/media/{niche}/videos/{base}.mp4",
-                        "poster": f"assets/media/{niche}/videos/{base}.jpg",
-                        "duration": dur, "w": w, "h": h, "original": orig})
+                        "poster": f"assets/media/{niche}/videos/{base}.webp",
+                        "duration": dur, "w": w, "h": h,
+                        "audio": has_audio, "original": orig})
                 else:
                     in_ += 1
                     base = f"{niche}-{in_:02d}"
@@ -386,7 +408,7 @@ def main():
 
     os.makedirs("assets", exist_ok=True)
     with open(os.path.join("assets", "manifest.json"), "w") as f:
-        json.dump(manifest, f, indent=2)
+        json.dump(manifest, f, separators=(",", ":"))
     total = sum(len(v["videos"]) + len(v["images"]) for v in manifest.values())
     REPORT["total_processed"] = total
     REPORT["finished"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())

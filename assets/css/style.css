@@ -722,3 +722,62 @@ body.modal-open { overflow: hidden; }
 
 /* niche page hero polish */
 .page-hero .niche-badge .tag { background: var(--esp-2); }
+
+/* ============================= SPEED & POLISH PACK ============================= */
+/* anchors never hide under the fixed nav */
+section[id], form[id] { scroll-margin-top: calc(var(--nav-h) + 10px); }
+
+/* scroll-lock body while the mobile menu is open */
+body.menu-open { overflow: hidden; }
+
+/* whole video card / case phone is a click target → keyboard needs focus ring */
+.vc-media { cursor: pointer; }
+.vc-media:focus-visible, .ph:focus-visible, .shot:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 3px; border-radius: var(--radius-sm);
+}
+
+/* invisible overlay button on the case-study phone (opens the sound player) */
+.case-phone { position: relative; }
+.ph-open { position: absolute; inset: 0; z-index: 3; border-radius: 20px; }
+.ph-open:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+/* ---------- modal player: sound toggle + pause state ---------- */
+.snd-toggle {
+  position: absolute; top: 14px; left: 12px; z-index: 7;
+  min-height: 34px; padding: 8px 14px; border-radius: 999px;
+  background: rgba(23, 18, 19, 0.72); color: #fff;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+.snd-toggle:hover { background: rgba(23, 18, 19, 0.9); transform: scale(1.04); }
+.snd-toggle.muted { background: rgba(181, 151, 119, 0.9); color: #171213; border-color: transparent; }
+.pp-toggle {
+  position: absolute; top: 50%; left: 50%; z-index: 7;
+  width: 58px; height: 58px; transform: translate(-50%, -50%);
+  border-radius: 50%; display: grid; place-items: center;
+  background: rgba(23, 18, 19, 0.66); color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.pp-toggle svg { width: 18px; height: 18px; }
+.pp-toggle[hidden] { display: none; }
+
+/* ---------- brief form: email + whatsapp actions ---------- */
+.form-actions { display: grid; gap: 10px; margin-top: 12px; }
+@media (min-width: 620px) { .form-actions { grid-template-columns: 1.15fr 1fr; } .form-actions .btn { width: 100%; } }
+.btn-wa {
+  background: linear-gradient(135deg, #2ee06f, #128c7e); color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+.btn-wa:hover { transform: translateY(-2px); filter: brightness(1.06); }
+.board .btn-wa { color: #fff; }
+.form-success .fs-or {
+  display: block; margin: 14px auto 0; max-width: 440px;
+  font-size: 0.78rem; color: var(--ink-mut);
+}
+.form-success .fs-or a { color: var(--esp); text-decoration: underline; text-underline-offset: 3px; }
+
+/* posters paint instantly while lazy video buffers */
+video.loopview { background: #171213; }

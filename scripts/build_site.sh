@@ -5,6 +5,16 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
+# Always regenerate minified assets if the minifiers are available
+# (keeps style.min.css / *.min.js in sync when sources were edited).
+PY=$(command -v python3 || command -v python)
+if "$PY" -c "import rjsmin, rcssmin" 2>/dev/null; then
+  "$PY" scripts/minify.py || echo "[build] minify failed — keeping committed .min files"
+else
+  "$PY" -m pip install --quiet --disable-pip-version-warning rjsmin rcssmin 2>/dev/null \
+    && "$PY" scripts/minify.py || echo "[build] minifiers unavailable — keeping committed .min files"
+fi
+
 if [ -f assets/manifest.json ] && [ -d assets/media ]; then
   echo "[build] assets/media already in repo — nothing to sync."
   exit 0

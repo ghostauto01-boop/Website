@@ -1,8 +1,17 @@
 /* ============================================================
    CREATEBYMOH — interactive engine
    Renders media from /assets/manifest.json (produced by the
-   Drive sync at build time), wires the TikTok-style player,
-   gallery lightbox, mobile nav, marquee and the brief forms.
+   Drive sync), wires the TikTok-style player (tap → full video
+   with sound), gallery lightbox, mobile nav, marquee and the
+   brief forms (prefilled Email + WhatsApp).
+
+   Performance model:
+     · <video> is rendered WITHOUT src (data-src only) so pages
+       never download 20+ clips on load — posters paint instantly.
+     · A lazy observer attaches src ~400px before the video enters
+       the viewport; a play observer auto-plays muted loops while
+       >=30% visible and pauses them offscreen / on hidden tabs.
+     · Other pages are prefetched on idle so navigation is instant.
    ============================================================ */
 (function () {
   "use strict";
@@ -12,13 +21,17 @@
   const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "_");
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g,
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------------- mobile nav ---------------- */
   const burger = $(".nav-burger");
+  const mobMenu = $(".mobile-menu");
+  if (mobMenu) mobMenu.setAttribute("aria-hidden", "true");
   if (burger) {
     burger.addEventListener("click", () => {
       const open = document.body.classList.toggle("menu-open");
       burger.setAttribute("aria-expanded", open ? "true" : "false");
+      if (mobMenu) mobMenu.setAttribute("aria-hidden", open ? "false" : "true");
     });
     $$(".mobile-menu a").forEach((a) =>
       a.addEventListener("click", () => document.body.classList.remove("menu-open")));
@@ -26,10 +39,14 @@
 
   /* ---------------- reveal on scroll ---------------- */
   const io = new IntersectionObserver(
-    (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add("on")),
+    (entries) => entries.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add("on"); io.unobserve(e.target); }
+    }),
     { threshold: 0.12 }
   );
-  $$(".reveal").forEach((el) => io.observe(el));
+  const watchReveal = (root) => $$(".reveal:not(.on)", root || document).forEach((el) => io.observe(el));
+  window.CBM_REVEAL = watchReveal;
+  watchReveal();
 
   /* ---------------- marquee ---------------- */
   const mq = $("[data-marquee]");
@@ -45,7 +62,7 @@
     statsEl.innerHTML = D.brand.stats
       .map((s) => `<div class="stat reveal"><b>${s.n}</b><span>${s.label}</span></div>`)
       .join("");
-    $$(".reveal", statsEl).forEach((el) => io.observe(el));
+    watchReveal(statsEl);
   }
 
   /* ---------------- manifest + card helpers ---------------- */
@@ -73,21 +90,28 @@
     });
   }
 
+  /* video markup: NO src — attached lazily when near viewport */
+  function lazyVideo(v, cls, label) {
+    return `<video class="${cls}" data-src="${esc(v.src)}" poster="${esc(v.poster || "")}" ` +
+      `muted loop playsinline preload="none" disablepictureinpicture aria-label="${esc(label || v.title)}"></video>`;
+  }
+
   function cardHTML(v) {
     return `
-    <article class="vcard reveal" data-src="${esc(v.src)}" data-title="${esc(v.title)}" data-meta="${esc(v.meta)}">
-      <div class="vc-media">
-        <video class="loopview" src="${esc(v.src)}" poster="${esc(v.poster || "")}" muted loop playsinline preload="metadata" aria-label="${esc(v.title)} preview loop"></video>
+    <article class="vcard reveal">
+      <div class="vc-media" data-src="${esc(v.src)}" data-title="${esc(v.title)}" data-audio="${v.audio ? "1" : ""}"
+           tabindex="0" role="button" aria-label="Play ${esc(v.title)} with sound">
+        ${lazyVideo(v, "loopview", v.title + " preview loop")}
         <div class="vc-grad"></div>
         <span class="vc-chip">${esc(v.chip)}</span>
         <div class="vc-info">
           <h3>${esc(v.title)}</h3>
           <div class="vc-meta">${esc(v.tag)}${v.duration ? " · " + v.duration + "s" : ""}</div>
           ${v.desc ? `<p>${esc(v.desc)}</p>` : ""}
-          <button class="vc-play" type="button" aria-label="Play ${esc(v.title)} campaign">
+          <span class="vc-play" aria-hidden="true">
             <svg viewBox="0 0 12 14" fill="currentColor"><path d="M0 0l12 7-12 7z"/></svg>
-            Play Campaign
-          </button>
+            Play with Sound
+          </span>
         </div>
       </div>
     </article>`;
@@ -109,32 +133,53 @@
     return imgs.length ? imgs[i % imgs.length] : null;
   };
   const VID = (slug, i) => { const l = state[slug] || []; return l.length ? l[Math.min(i, l.length - 1)] : null; };
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const phoneIO = new IntersectionObserver((es) => es.forEach((e) => {
+  /* ---------------- lazy attach + autoplay-in-view system ---------------- */
+  const mediaIO = ("IntersectionObserver" in window) ? new IntersectionObserver((es) => es.forEach((e) => {
     const v = e.target;
-    if (e.isIntersecting && !reduced) v.play().catch(() => {});
-    else v.pause();
-  }), { threshold: 0.25 });
+    if (e.isIntersecting) {
+      // attach src once, a little before it becomes visible (rootMargin below)
+      if (!v.src && v.dataset.src) v.src = v.dataset.src;
+      if (!reduced) { const p = v.play(); if (p) p.catch(() => {}); }
+    } else if (!v.paused) {
+      v.pause();
+    }
+  }), { threshold: 0.3, rootMargin: "350px 0px 350px 0px" }) : null;
 
-  function watchLoops(root) { $$("video.loopview", root).forEach((v) => phoneIO.observe(v)); }
+  function watchLoops(root) {
+    $$("video.loopview", root || document).forEach((v) => {
+      if (mediaIO) mediaIO.observe(v);
+      else if (!v.src && v.dataset.src) { v.src = v.dataset.src; if (!reduced) v.play().catch(() => {}); }
+    });
+  }
+  /* pause everything when the tab hides (battery + data savings) */
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) $$("video.loopview").forEach((v) => !v.paused && v.pause());
+    else $$("video.loopview").forEach((v) => {
+      // resume only loops currently on screen
+      const r = v.getBoundingClientRect();
+      if (v.src && !reduced && r.bottom > 0 && r.top < innerHeight && r.width) v.play().catch(() => {});
+    });
+  });
 
   function loopingPhone(v, title) {
     return `
-      <div class="ph" data-src="${esc(v.src)}" data-title="${esc(title || v.title)}" tabindex="0" role="button" aria-label="Play ${esc(title || v.title)}">
-        <video class="loopview" src="${esc(v.src)}" poster="${esc(v.poster || "")}" muted loop playsinline preload="metadata"></video>
+      <div class="ph" data-src="${esc(v.src)}" data-title="${esc(title || v.title)}" data-audio="${v.audio ? "1" : ""}"
+           tabindex="0" role="button" aria-label="Play ${esc(title || v.title)} with sound">
+        ${lazyVideo(v, "loopview", title || v.title)}
         <div class="ph-tag"><span>${esc(title || v.title)}</span><i>${esc(v.chip || "")}</i></div>
       </div>`;
   }
   function bindPhones(root) {
     $$(".ph", root).forEach((ph) => {
-      const open = () => openModal(ph.dataset.src, ph.dataset.title);
+      const open = () => openModal(ph.dataset.src, ph.dataset.title, !!ph.dataset.audio);
       ph.addEventListener("click", open);
       ph.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && open());
     });
     watchLoops(root);
   }
 
+  /* ---------------- homepage boards ---------------- */
   function renderHome() {
     const L = D.homeLayout;
     const hasMedia = !!state.manifest;
@@ -146,11 +191,11 @@
       const col = $("#hero-collage");
       if (col && main) col.innerHTML = `
         <div>
-          <div class="collage-frame tall"><img src="${esc(main.src)}" alt="CREATEBYMOH campaign hero frame"></div>
+          <div class="collage-frame tall"><img src="${esc(main.src)}" alt="CREATEBYMOH campaign hero frame" fetchpriority="high" decoding="async"></div>
           <div class="collage-cap">Campaign Still ✦ CreateByMoh</div>
         </div>
         <div>
-          ${side ? `<div class="collage-frame short"><img src="${esc(side.src)}" alt="Campaign detail frame"></div>` : ""}
+          ${side ? `<div class="collage-frame short"><img src="${esc(side.src)}" alt="Campaign detail frame" fetchpriority="high" decoding="async"></div>` : ""}
           <div class="collage-frame short ghost" style="margin-top:12px">Sensory worlds<br>in motion ✦</div>
         </div>`;
     }
@@ -176,7 +221,7 @@
     const whoImg = IMG("streetwear", 1) || IMG("perfume", 3) || IMG("jewelry", 1);
     const whoEl = $("#who-img");
     if (whoEl) {
-      if (whoImg) whoEl.innerHTML = `<img src="${esc(whoImg.src)}" alt="CREATEBYMOH art direction — studio frame">`;
+      if (whoImg) whoEl.innerHTML = `<img src="${esc(whoImg.src)}" alt="CREATEBYMOH art direction — studio frame" loading="lazy" decoding="async">`;
       else whoEl.style.display = "none";
     }
 
@@ -184,7 +229,7 @@
     const anaImg = IMG("jewelry", 3) || IMG("perfume", 5) || IMG("streetwear", 2);
     const anaEl = $("#ana-img");
     if (anaEl) {
-      if (anaImg) anaEl.innerHTML = `<img src="${esc(anaImg.src)}" alt="Campaign metrics board frame">`;
+      if (anaImg) anaEl.innerHTML = `<img src="${esc(anaImg.src)}" alt="Campaign metrics board frame" loading="lazy" decoding="async">`;
       else anaEl.style.display = "none";
     }
 
@@ -194,8 +239,12 @@
     const caseVid = VID("perfume", 2) || VID("jewelry", 0) || VID("streetwear", 0);
     const cp = $("#case-phone");
     if (cp && caseVid) {
-      cp.innerHTML = `<video class="loopview" src="${esc(caseVid.src)}" poster="${esc(caseVid.poster || "")}" muted loop playsinline preload="metadata" aria-label="Case study campaign loop"></video>`;
+      cp.innerHTML = lazyVideo(caseVid, "loopview", "Case study campaign loop") +
+        `<button class="ph-open" data-src="${esc(caseVid.src)}" data-title="Case Study Campaign" data-audio="${caseVid.audio ? "1" : ""}" aria-label="Play case study with sound"></button>`;
       watchLoops(cp);
+      $(".ph-open", cp).addEventListener("click", function () {
+        openModal(this.dataset.src, this.dataset.title, !!this.dataset.audio);
+      });
     }
 
     /* niche pills */
@@ -225,7 +274,7 @@
       });
       strip.innerHTML = phones.length
         ? phones.map((v) => loopingPhone(v)).join("")
-        : `<div class="media-error">Campaign videos appear here after the first Netlify build pulls your Drive content.</div>`;
+        : `<div class="media-error">Campaign videos are being prepared — they appear automatically in a few minutes.</div>`;
       bindPhones(strip);
     }
 
@@ -243,9 +292,9 @@
       snap.innerHTML = out.length
         ? out.map((o) => `
           <figure class="shot snap" data-full="${esc(o.im.src)}" tabindex="0" role="button" aria-label="Open ${o.slug} photography snapshot full size">
-            <img src="${esc(o.im.src)}" alt="${o.slug} photography snapshot ${o.n + 1}" loading="lazy">
+            <img src="${esc(o.im.src)}" alt="${o.slug} photography snapshot ${o.n + 1}" loading="lazy" decoding="async">
           </figure>`).join("")
-        : `<div class="media-error">Photography snapshots appear here after the first Netlify build pulls your Drive content.</div>`;
+        : `<div class="media-error">Photography snapshots are being prepared — they appear automatically in a few minutes.</div>`;
       bindGallery(snap);
     }
 
@@ -259,15 +308,16 @@
       const im = hasMedia ? IMG(t.img.niche, t.img.index) : null;
       return `
       <div class="testi-card reveal">
-        ${im ? `<div class="tc-img"><img src="${esc(im.src)}" alt="${esc(t.name)} campaign frame" loading="lazy"></div>` : ""}
+        ${im ? `<div class="tc-img"><img src="${esc(im.src)}" alt="${esc(t.name)} campaign frame" loading="lazy" decoding="async"></div>` : ""}
         <span class="tc-name">${esc(t.name)}</span>
         <p>${esc(t.quote)}</p>
       </div>`;
     }).join("");
 
-    $$(".reveal", $("#page-root") || document).forEach((el) => io.observe(el));
+    watchReveal($("#page-root") || document);
   }
 
+  /* ---------------- niche pages ---------------- */
   function renderNiche(slug) {
     const grid = $("#video-grid");
     const cfg = D.niches[slug];
@@ -275,10 +325,10 @@
       const list = state[slug] || [];
       grid.innerHTML = list.length
         ? list.map(cardHTML).join("")
-        : `<div class="media-error">Campaign videos are being prepared — they appear automatically once the site is built on Netlify.</div>`;
+        : `<div class="media-error">Campaign videos are being prepared — they appear automatically in a few minutes.</div>`;
       bindCards(grid);
       watchLoops(grid);
-      $$(".reveal", grid).forEach((el) => io.observe(el));
+      watchReveal(grid);
     }
     const gal = $("#gallery-grid");
     if (gal) {
@@ -287,12 +337,12 @@
         ? imgs.map((im, i) => `
             <figure class="shot reveal" data-full="${esc(im.src)}" tabindex="0" role="button"
                     aria-label="Open ${esc(cfg.galleryLabel)} ${i + 1} full size">
-              <img src="${esc(im.src)}" alt="${esc(cfg.galleryLabel)} art direction frame ${i + 1}" loading="lazy">
+              <img src="${esc(im.src)}" alt="${esc(cfg.galleryLabel)} art direction frame ${i + 1}" loading="lazy" decoding="async">
               <figcaption>${esc(cfg.galleryLabel)} · ${String(i + 1).padStart(2, "0")}</figcaption>
             </figure>`).join("")
-        : `<div class="media-error">Art direction frames are being prepared — they appear automatically once the site is built on Netlify.</div>`;
+        : `<div class="media-error">Art direction frames are being prepared — they appear automatically in a few minutes.</div>`;
       bindGallery(gal);
-      $$(".reveal", gal).forEach((el) => io.observe(el));
+      watchReveal(gal);
     }
   }
 
@@ -315,29 +365,74 @@
     </div>`;
   }
 
-  /* ---------------- modal player ---------------- */
+  /* ---------------- modal player (tap → full video with sound) ---------------- */
   const modal = $("#campaign-modal");
-  function openModal(src, title) {
-    if (!modal) return;
+  let modalVid = null, lastFocus = null;
+
+  function openModal(src, title, hasAudio) {
+    if (!modal || !src) return;
+    lastFocus = document.activeElement;
     const screen = $(".phone-screen", modal);
     screen.innerHTML = `
-      <video src="${esc(src)}" muted loop playsinline autoplay controls preload="metadata"
+      <video src="${esc(src)}" loop playsinline preload="auto"
              aria-label="${esc(title)} campaign video"></video>
-      ${tiktokOverlay()}`;
+      ${tiktokOverlay()}
+      <button class="snd-toggle" type="button" aria-label="Toggle sound">🔊 Sound on</button>
+      <button class="pp-toggle" type="button" aria-label="Pause video" hidden>
+        <svg viewBox="0 0 12 14" fill="currentColor"><path d="M0 0h4v14H0zM8 0h4v14H8z"/></svg>
+      </button>`;
     modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
     document.body.classList.add("modal-open");
+
+    const vid = $("video", screen);
+    const snd = $(".snd-toggle", screen);
+    const pp = $(".pp-toggle", screen);
+    modalVid = vid;
+
+    const setSnd = () => {
+      snd.textContent = vid.muted ? "🔇 Tap for sound" : "🔊 Sound on";
+      snd.classList.toggle("muted", vid.muted);
+    };
+    const setPp = () => { pp.hidden = !vid.paused; };
+    // no audio track on file → hide the sound button entirely
+    if (!hasAudio) snd.style.display = "none";
+
+    vid.muted = false;                 // tap = user gesture → sound allowed
+    vid.volume = 1;
+    const p = vid.play();
+    if (p) p.catch(() => {            // strict autoplay policies → begin muted
+      vid.muted = true;
+      vid.play().catch(() => {});
+    });
+    vid.addEventListener("play", setPp);
+    vid.addEventListener("pause", setPp);
+    snd.addEventListener("click", () => {
+      vid.muted = !vid.muted;
+      if (!vid.muted && vid.paused) vid.play().catch(() => {});
+      setSnd();
+    });
+    pp.addEventListener("click", () => vid.play().catch(() => {}));
+    vid.addEventListener("click", () => { if (vid.paused) vid.play().catch(() => {}); else vid.pause(); });
+    setPp();
+    $(".modal-close", modal).focus();
   }
+
   function closeModal() {
     if (!modal) return;
     modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
     document.body.classList.remove("modal-open");
     const v = $("video", modal);
     if (v) { v.pause(); v.removeAttribute("src"); v.load(); }
+    modalVid = null;
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
   }
   function bindCards(root) {
-    $$(".vcard", root).forEach((card) => {
-      $(".vc-play", card).addEventListener("click", () =>
-        openModal(card.dataset.src, card.dataset.title));
+    $$(".vc-media", root).forEach((media) => {
+      const open = () => openModal(media.dataset.src, media.dataset.title, !!media.dataset.audio);
+      media.addEventListener("click", open);
+      media.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && open());
     });
   }
   if (modal) {
@@ -365,41 +460,66 @@
     document.body.classList.remove("modal-open");
   });
 
-  /* ---------------- brief form ---------------- */
+  /* ---------------- brief form: prefilled Email + WhatsApp ---------------- */
+  function briefFields(form) {
+    const g = (n) => ($(`[name="${n}"]`, form) || {}).value || "";
+    const niche = g("niche") === "Other (Specify below)" ? "Other: " + g("specify") : g("niche");
+    const lines = [
+      `Brand: ${g("brand")}`,
+      `Email: ${g("email")}`,
+      `Industry Niche: ${niche}`,
+      `Targeted Ad Style: ${g("adstyle")}`,
+      `Creative Format: ${g("format")}`,
+      `${form.dataset.productLabel || "Product / Line"}: ${g("product")}`,
+      `${form.dataset.descLabel || "Description"}: ${g("desc")}`,
+    ];
+    const subject = `Free 10-15s Ad Mockup Brief — ${g("brand")}`;
+    return { subject: subject, lines: lines };
+  }
+  function showSuccess(form, channel) {
+    const ok = $("#brief-success");
+    if (!ok) return;
+    const emailMsg = $("[data-ok-email]", ok);
+    const waMsg = $("[data-ok-wa]", ok);
+    if (emailMsg) emailMsg.hidden = channel !== "email";
+    if (waMsg) waMsg.hidden = channel !== "wa";
+    form.hidden = true;
+    ok.classList.add("show");
+    ok.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+  }
+
   $$("form[data-brief]").forEach((form) => {
     const nicheSel = $('[name="niche"]', form);
     const specifyWrap = $("[data-specify-wrap]", form);
-    const toggleSpecify = () => {
-      const other = nicheSel.value.toLowerCase().includes("other");
-      specifyWrap.style.display = other ? "" : "none";
-      $('[name="specify"]', form).required = other;
-    };
-    nicheSel.addEventListener("change", toggleSpecify);
-    toggleSpecify();
+    if (nicheSel && specifyWrap) {
+      const toggleSpecify = () => {
+        const other = nicheSel.value.toLowerCase().includes("other");
+        specifyWrap.style.display = other ? "" : "none";
+        $('[name="specify"]', form).required = other;
+      };
+      nicheSel.addEventListener("change", toggleSpecify);
+      toggleSpecify();
+    }
 
+    /* email route — validates, then launches prefilled mail draft */
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const g = (n) => ($(`[name="${n}"]`, form) || {}).value || "";
-      const lines = [
-        `Brand: ${g("brand")}`,
-        `Email: ${g("email")}`,
-        `Industry Niche: ${g("niche") === "Other (Specify below)" ? "Other: " + g("specify") : g("niche")}`,
-        `Targeted Ad Style: ${g("adstyle")}`,
-        `Creative Format: ${g("format")}`,
-        `${form.dataset.productLabel || "Product / Line"}: ${g("product")}`,
-        `${form.dataset.descLabel || "Description"}: ${g("desc")}`,
-        "",
-        "Photos/reference files will be attached to this email.",
-      ];
-      const subject = `Free 10-15s Ad Mockup Brief — ${g("brand")}`;
+      const b = briefFields(form);
+      const body = b.lines.concat(["", "Photos/reference files will be attached to this email."]).join("\n");
       window.location.href =
-        `mailto:${D.brand.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`;
-      const ok = $(`#brief-success`);
-      if (ok) {
-        form.hidden = true;
-        ok.classList.add("show");
-        ok.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+        `mailto:${D.brand.email}?subject=${encodeURIComponent(b.subject)}&body=${encodeURIComponent(body)}`;
+      showSuccess(form, "email");
+    });
+
+    /* whatsapp route — validates, then opens chat with the same brief */
+    const waBtn = $("[data-wa-send]", form);
+    if (waBtn) waBtn.addEventListener("click", () => {
+      if (!form.reportValidity()) return;
+      const b = briefFields(form);
+      const text = "👋 " + b.subject + "\n\n" + b.lines.join("\n") +
+        "\n\nI'll send my product photos here in the chat.";
+      window.open(`https://wa.me/${D.brand.waNumber}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+      showSuccess(form, "wa");
     });
   });
 
@@ -422,9 +542,23 @@
     });
   };
 
+  /* ---------------- prefetch pages for instant navigation ---------------- */
+  function prefetchPages() {
+    const pg = document.body.dataset.page || "home";
+    const self = pg === "home" ? "/" : `/${pg}/`;
+    (D.prefetch || []).forEach((href) => {
+      if (href === self) return;
+      const l = document.createElement("link");
+      l.rel = "prefetch"; l.href = href; l.as = "document";
+      document.head.appendChild(l);
+    });
+  }
+  if ("requestIdleCallback" in window) requestIdleCallback(prefetchPages, { timeout: 4000 });
+  else window.addEventListener("load", () => setTimeout(prefetchPages, 1200));
+
   /* ---------------- boot: fetch manifest ---------------- */
   const page = document.body.dataset.page;
-  fetch(D.manifestUrl, { cache: "no-store" })
+  fetch(D.manifestUrl)
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error("manifest " + r.status))))
     .then((m) => {
       state.manifest = m;

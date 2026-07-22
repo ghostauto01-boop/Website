@@ -7,12 +7,15 @@
   <meta name="description" content="Fine jewelry and accessory video ads — macro films of precious metals, diamond pavés and mirror finishes staged for maximum sparkle. Free 10–15s mockup in 48h.">
   <meta property="og:title" content="CREATEBYMOH — Fine Jewelry & Accessory Video Ad Portfolio">
   <meta property="og:description" content="Luxury closeups, aesthetic macros and tactile jewelry films. Free custom ad mockup in 48 hours.">
-  <meta name="theme-color" content="#07070b">
+  <meta name="theme-color" content="#2a2325">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/style.min.css">
+  <meta property="og:image" content="https://createbymoh.netlify.app/assets/media/perfume/images/perfume-01.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://createbymoh.netlify.app/assets/media/perfume/images/perfume-01.webp">
 </head>
 <body data-page="jewelry" data-niche-preset="Fine Jewelry">
 
@@ -77,7 +80,7 @@
         <div class="section-head reveal">
           <span class="eyebrow"><span class="dot"></span> Video Campaigns</span>
           <h2>Fine Jewelry &amp; Accessory <em>Portfolio</em></h2>
-          <p>Every campaign below is a CREATEBYMOH jewelry sample — tap a card to watch the full loop in the native social preview.</p>
+          <p>Every campaign below is a CREATEBYMOH jewelry sample — tap a card to watch it with sound in the native social preview.</p>
         </div>
         <div class="card-grid" id="video-grid"></div>
       </div>
@@ -146,14 +149,19 @@
                   <textarea id="f-desc" name="desc" placeholder="Carvings, finishes, stone cuts, target audience, vibe references..."></textarea>
                 </div>
               </div>
-              <p class="form-note" style="margin-top:16px">📸 Photos are added as email attachments upon submit</p>
-              <button class="btn btn-gold form-submit" type="submit">Submit Jewelry Brief ➔</button>
+              <p class="form-note" style="margin-top:16px">📸 Email → attach photos to the draft &nbsp;·&nbsp; WhatsApp → send photos in the chat</p>
+              <div class="form-actions">
+                <button class="btn btn-gold form-submit" type="submit">Submit Jewelry Brief ➔ ✉️</button>
+                <button class="btn btn-wa" type="button" data-wa-send>Send via WhatsApp 💬</button>
+              </div>
             </form>
 
             <div class="form-success brief-form" id="brief-success">
               <div class="crown">👑</div>
               <h3>Brief Prepared</h3>
-              <p>Success! Your email client has been launched to forward the details directly to <b>webwizardmarketingagency@gmail.com</b>. Please attach your product photos and hit Send!</p>
+              <p data-ok-email>Success! Your brief is ready — your email client has been launched with everything pre-filled to <b>webwizardmarketingagency@gmail.com</b>. Just attach your product photos and hit Send!</p>
+              <p data-ok-wa hidden>Success! The full brief has been handed to <b>WhatsApp</b> — just press Send in the chat that opened, then drop your product photos into the conversation.</p>
+              <span class="fs-or">Prefer the other channel? <a href="mailto:webwizardmarketingagency@gmail.com">Email us</a> · <a href="https://wa.me/2348164802777" target="_blank" rel="noopener">WhatsApp us</a></span>
             </div>
           </div>
         </div>
@@ -217,8 +225,8 @@
 
   <div class="lightbox" id="lightbox"><img alt="Art direction frame full view"></div>
 
-  <script src="/assets/js/data.js"></script>
-  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/data.min.js"></script>
+  <script src="/assets/js/main.min.js"></script>
   <script>
     (function () {
       var D = window.CBM, cfg = D.niches.jewelry;
@@ -226,6 +234,7 @@
         return '<div class="brief-point reveal"><div class="bp-ico">' + p.icon + '</div><div><b>' + p.title + '</b><p>' + p.desc + '</p></div></div>';
       }).join("");
       window.CBM_FILL_SELECTS && window.CBM_FILL_SELECTS();
+      window.CBM_REVEAL && window.CBM_REVEAL();
       document.getElementById("year").textContent = new Date().getFullYear();
     })();
   </script>

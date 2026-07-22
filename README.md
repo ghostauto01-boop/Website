@@ -28,12 +28,27 @@ Campaign media lives in three public Drive folders
 
 1. Lists every file in all three folders.
 2. Downloads originals to a temp dir (never committed).
-3. Encodes every video (incl. `.mov`) to muted H.264 MP4 (max 720px wide) + poster
-   frame → `assets/media/<niche>/videos/`.
+3. Encodes every video (incl. `.mov`) to H.264 MP4 (CRF 28, max 720px wide,
+   faststart) — keeping mono AAC audio when the original has it, so the site's
+   tap-to-watch player can play with sound — plus a WebP poster frame →
+   `assets/media/<niche>/videos/`. Video file names carry a content hash, so
+   they are served with immutable cache headers and never go stale.
 4. Converts every image to WebP (max 1400px, q80) → `assets/media/<niche>/images/`.
-5. Writes `assets/manifest.json`, which the front-end renders into cards/galleries.
+5. Writes `assets/manifest.json` (compact JSON), which the front-end renders
+   into cards/galleries.
 
 The step is idempotent — already-processed files are skipped on re-runs.
+
+## Performance model
+
+- **Minified code** — `scripts/minify.py` produces the `.min.css`/`.min.js` the
+  pages load (also re-run automatically during Netlify builds).
+- **Lazy video** — `<video>` tags render without `src`; a pair of
+  IntersectionObservers attaches the source ~350px before viewport entry and
+  auto-plays muted loops while ≥30% visible, pausing offscreen/hidden tabs.
+- **Instant navigation** — other pages are `rel=prefetch`ed on idle.
+- **Smart caching** (`netlify.toml`) — hashed media: 1-year immutable;
+  manifest: 2 min; code: 30 min.
 
 ## Deploy on Netlify (recommended)
 

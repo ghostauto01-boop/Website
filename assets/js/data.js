@@ -3,11 +3,14 @@
    ============================================================ */
 window.CBM = {
   manifestUrl: "/assets/manifest.json",
+  /* pages prefetched on idle for instant navigation */
+  prefetch: ["/perfumes/", "/streetwear/", "/jewelry/", "/how-we-work/", "/about/"],
 
   brand: {
     name: "CREATEBYMOH",
     handle: "@createbymoh",
     email: "webwizardmarketingagency@gmail.com",
+    waNumber: "2348164802777",
     whatsapp:
       "https://wa.me/2348164802777?text=Hi%20CREATEBYMOH%2C%20I%27m%20interested%20in%20a%20free%20custom%20ad%20campaign%20for%20my%20brand!",
     taglineVoice: "Designing premium sensory worlds in motion...",
@@ -86,13 +89,13 @@ window.CBM = {
         sub: "Provide details on your perfume bottle style and targeted client vibe. We will generate a free custom 10-15s vertical campaign mock in 48 hours.",
         points: [
           { icon: "🧪", title: "Scent Profiling", desc: "Visual layouts meticulously configured to match your top, heart, and base notes." },
-          { icon: "✉️", title: "Direct email briefing", desc: "Brief options are instantly structured and pre-filled in your default email draft to webwizardmarketingagency@gmail.com on submit." },
+          { icon: "✉️", title: "Email or WhatsApp", desc: "Brief options are instantly structured — forward the prefilled email to webwizardmarketingagency@gmail.com, or send the same brief via WhatsApp." },
         ],
         brandLabel: "Fragrance Brand",
         productLabel: "Bottle Finish / Materials",
         descLabel: "Key Olfactory Notes & targeted feel",
         submitLabel: "Submit Fragrance Brief",
-        successAttach: "Please attach your bottle photos and hit Send!",
+        successAttach: "Email: attach your bottle photos and hit Send. WhatsApp: drop them in the chat.",
       },
     },
 
@@ -132,13 +135,13 @@ window.CBM = {
         sub: "Provide details on your garment's fabric weight and target style. We will generate a free custom 10-15s vertical lookbook or transition mock in 48 hours.",
         points: [
           { icon: "🧵", title: "Fabric Matchmaking", desc: "Visual layouts meticulously configured to highlight heavy cotton drapes, texture weaves, or print details." },
-          { icon: "✉️", title: "Direct email briefing", desc: "Brief options are instantly structured and pre-filled in your default email draft to webwizardmarketingagency@gmail.com on submit." },
+          { icon: "✉️", title: "Email or WhatsApp", desc: "Brief options are instantly structured — forward the prefilled email to webwizardmarketingagency@gmail.com, or send the same brief via WhatsApp." },
         ],
         brandLabel: "Garment Brand",
         productLabel: "Fabric Material & GSM",
         descLabel: "Key Design Details & targeted lookbook feel",
         submitLabel: "Submit Streetwear Brief",
-        successAttach: "Please attach your product photos and hit Send!",
+        successAttach: "Email: attach your product photos and hit Send. WhatsApp: drop them in the chat.",
       },
     },
 
@@ -168,13 +171,13 @@ window.CBM = {
         sub: "Provide details on your accessory's gold/silver material finish and gemstone specs. We will generate a free custom 10-15s vertical campaign mockup in 48 hours.",
         points: [
           { icon: "💎", title: "Material Matchmaking", desc: "Visual layouts meticulously configured to capture precious metal glows, diamond sparkle caustics, or custom carving details." },
-          { icon: "✉️", title: "Direct email briefing", desc: "Brief options are instantly structured and pre-filled in your email draft to webwizardmarketingagency@gmail.com on submit." },
+          { icon: "✉️", title: "Email or WhatsApp", desc: "Brief options are instantly structured — forward the prefilled email to webwizardmarketingagency@gmail.com, or send the same brief via WhatsApp." },
         ],
         brandLabel: "Jewelry Brand",
         productLabel: "Metal & Gemstone Type",
         descLabel: "Key Design Details & targeted campaign feel",
         submitLabel: "Submit Jewelry Brief",
-        successAttach: "Please attach your product photos and hit Send!",
+        successAttach: "Email: attach your product photos and hit Send. WhatsApp: drop them in the chat.",
       },
     },
   },
@@ -219,15 +222,15 @@ window.CBM = {
     sub: "Give us details on your brand's style profile and target audience. We'll hand-craft a bespoke 10-15s ad mockup with native cinematic transitions in 48 hours.",
     points: [
       { icon: "🎯", title: "Product Matchmaking", desc: "Visual layouts meticulously configured to match your product's specific materials (gold, silver, cotton, or liquid)." },
-      { icon: "✉️", title: "Direct Email Forwarding", desc: "All campaign details are instantly compiled and forwarded to webwizardmarketingagency@gmail.com on submit." },
-      { icon: "🔇", title: "Zero-Audio Focus", desc: "Muted native loops that draw attention to dewy visual details, optimized for high web conversion rates." },
+      { icon: "✉️", title: "Email or WhatsApp", desc: "Your brief is compiled instantly — forward it by email to webwizardmarketingagency@gmail.com, or send the same brief in a WhatsApp chat. Your choice." },
+      { icon: "🔊", title: "Scroll-Autoplay Previews", desc: "Every campaign auto-plays silently as you scroll — tap any video to replay it with full sound in the native social preview." },
     ],
     brandLabel: "Brand Name",
     productLabel: "Product / Line Name",
     descLabel: "Brief Description / Material Notes",
     submitLabel: "Submit Project Brief",
     successTitle: "Olfactory Brief Prepared",
-    successAttach: "Please attach your product photos to the email and hit Send!",
+    successAttach: "Email: attach your product photos and hit Send. WhatsApp: drop them in the chat.",
   },
 
   /* ---------------- editorial homepage boards ---------------- */
@@ -260,7 +263,7 @@ window.CBM = {
       {
         title: "UGC-Style Video + Art Direction",
         desc: "10–15s vertical campaign loops with native cinematic transitions — staged lighting, tactile macro passes and hook-first pacing, platform-ready for TikTok, Reels and Shorts.",
-        list: ["Lifestyle & sensory videos", "Seamless transition cuts", "Cinematic 3D panning", "Hook copy + captions", "Muted native loops"],
+        list: ["Lifestyle & sensory videos", "Seamless transition cuts", "Cinematic 3D panning", "Hook copy + captions", "Tap-for-sound previews"],
         cta: "Free mockup in 48h",
       },
       {
