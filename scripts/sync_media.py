@@ -23,6 +23,7 @@ can be served with immutable cache headers without ever going stale.
 Exits 1 when NOTHING was processed so the workflow visibly fails.
 """
 import hashlib
+import traceback
 import html
 import json
 import os
@@ -185,10 +186,20 @@ FFPROBE = shutil.which("ffprobe")
 
 
 def ensure_ffmpeg():
-    """Guarantee working ffmpeg/ffprobe (download a static build if absent)."""
+    """Guarantee a working ffmpeg — PATH first, then the imageio-ffmpeg pip
+    wheel (bundles ffmpeg 7.x; available wherever pip works, unlike flaky
+    external mirrors), then a static build download as last resort.
+    ffprobe is optional: probe_video() falls back to parsing `ffmpeg -i`."""
     global FF, FFPROBE
-    if FF and FFPROBE:
+    if FF:
         return
+    try:
+        import imageio_ffmpeg
+        FF = imageio_ffmpeg.get_ffmpeg_exe()
+        REPORT["ffmpeg"] = f"imageio-ffmpeg:{FF}"
+        return
+    except Exception as e:
+        REPORT["imageio_ffmpeg_error"] = repr(e)
     import glob
     import tarfile
     dl = "/tmp/ffmpeg-static"
@@ -219,11 +230,13 @@ def ensure_ffmpeg():
             t.extractall(dl, filter="data")
     ff = next(iter(glob.glob(os.path.join(dl, "**", "ffmpeg"), recursive=True)), None)
     fp = next(iter(glob.glob(os.path.join(dl, "**", "ffprobe"), recursive=True)), None)
-    if not (ff and fp):
+    if not ff:
         raise RuntimeError("static ffmpeg extraction failed")
     os.chmod(ff, 0o755)
-    os.chmod(fp, 0o755)
-    FF, FFPROBE = ff, fp
+    if fp:
+        os.chmod(fp, 0o755)
+        FFPROBE = fp
+    FF = ff
     REPORT["ffmpeg"] = ff
 
 
@@ -233,18 +246,30 @@ def run_ff(cmd):
 
 
 def probe_video(path):
+    if FFPROBE:
+        try:
+            out = subprocess.run(
+                [FFPROBE, "-v", "quiet", "-print_format", "json",
+                 "-show_entries", "format=duration",
+                 "-show_entries", "stream=width,height,codec_type", path],
+                capture_output=True, text=True, check=True).stdout
+            info = json.loads(out)
+            dur = round(float(info.get("format", {}).get("duration", 0)))
+            streams = info.get("streams", [])
+            st = next((s for s in streams if s.get("width")), {})
+            has_audio = any(s.get("codec_type") == "audio" for s in streams)
+            return dur, st.get("width", 0), st.get("height", 0), has_audio
+        except Exception:
+            pass
+    # fallback: parse `ffmpeg -i` stderr (imageio-ffmpeg wheel has no ffprobe)
     try:
-        out = subprocess.run(
-            [FFPROBE or "ffprobe", "-v", "quiet", "-print_format", "json",
-             "-show_entries", "format=duration",
-             "-show_entries", "stream=width,height,codec_type", path],
-            capture_output=True, text=True, check=True).stdout
-        info = json.loads(out)
-        dur = round(float(info.get("format", {}).get("duration", 0)))
-        streams = info.get("streams", [])
-        st = next((s for s in streams if s.get("width")), {})
-        has_audio = any(s.get("codec_type") == "audio" for s in streams)
-        return dur, st.get("width", 0), st.get("height", 0), has_audio
+        r = subprocess.run([FF, "-hide_banner", "-i", path],
+                           capture_output=True, text=True, timeout=60)
+        txt = r.stderr or ""
+        d = re.search(r"Duration: (\d+):(\d+):([\d.]+)", txt)
+        secs = round(int(d.group(1)) * 3600 + int(d.group(2)) * 60 + float(d.group(3))) if d else 0
+        s = re.search(r"(\d{2,4})x(\d{2,4})", txt)
+        return secs, (int(s.group(1)) if s else 0), (int(s.group(2)) if s else 0), ("Audio:" in txt)
     except Exception:
         return 0, 0, 0, False
 
@@ -422,4 +447,18 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception:
+        # Never die silently — commit a report the workflow can surface,
+        # then exit cleanly so the commit step still runs.
+        try:
+            REPORT["fatal_traceback"] = traceback.format_exc()
+            os.makedirs(OUT_DIR, exist_ok=True)
+            with open(os.path.join(OUT_DIR, "sync-report.json"), "w") as f:
+                json.dump(REPORT, f, indent=2)
+            print("!!! FATAL — see assets/media/sync-report.json")
+            print(REPORT["fatal_traceback"])
+        except Exception:
+            print("!!! FATAL and could not even write the report")
+        sys.exit(0)
