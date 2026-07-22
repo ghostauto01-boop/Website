@@ -67,6 +67,17 @@
 
   /* ---------------- manifest + card helpers ---------------- */
   const state = { manifest: null };
+  /* manifest paths are relative ("assets/media/...") — from nested pages like
+     /perfumes/ they would resolve to /perfumes/assets/... (404). Force them
+     root-absolute once so media loads from every page. */
+  const abs = (p) => p && !/^(https?:)?\/\//.test(p) && p.charAt(0) !== "/" ? "/" + p : p;
+  function normalizeManifest(m) {
+    Object.keys(m || {}).forEach((slug) => {
+      (m[slug].videos || []).forEach((v) => { v.src = abs(v.src); if (v.poster) v.poster = abs(v.poster); });
+      (m[slug].images || []).forEach((im) => { im.src = abs(im.src); });
+    });
+    return m;
+  }
 
   function enrichNiche(slug, vids) {
     const cfg = D.niches[slug];
@@ -561,9 +572,9 @@
   fetch(D.manifestUrl)
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error("manifest " + r.status))))
     .then((m) => {
-      state.manifest = m;
+      state.manifest = normalizeManifest(m);
       Object.keys(D.niches).forEach((slug) => {
-        state[slug] = enrichNiche(slug, (m[slug] && m[slug].videos) || []);
+        state[slug] = enrichNiche(slug, (state.manifest[slug] && state.manifest[slug].videos) || []);
       });
     })
     .catch(() => { state.manifest = null; })

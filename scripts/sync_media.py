@@ -406,8 +406,8 @@ def main():
                     transcode(raw, mp4, webp)
                     dur, w, h, has_audio = probe_video(mp4)
                     entry["videos"].append({
-                        "src": f"assets/media/{niche}/videos/{base}.mp4",
-                        "poster": f"assets/media/{niche}/videos/{base}.webp",
+                        "src": f"/assets/media/{niche}/videos/{base}.mp4",
+                        "poster": f"/assets/media/{niche}/videos/{base}.webp",
                         "duration": dur, "w": w, "h": h,
                         "audio": has_audio, "original": orig})
                 else:
@@ -421,7 +421,7 @@ def main():
                     else:
                         w, h = optimize_image(raw, webp)
                     entry["images"].append({
-                        "src": f"assets/media/{niche}/images/{base}.webp",
+                        "src": f"/assets/media/{niche}/images/{base}.webp",
                         "w": w, "h": h, "original": orig})
             except Exception as e:
                 fails.append(f"{orig}: {e!r}")
