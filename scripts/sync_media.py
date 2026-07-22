@@ -213,9 +213,41 @@ def optimize_image(src, dest):
 
 
 def collect_raw(niche, folder_id, niche_raw):
-    """Ensure every Drive file exists locally; return [(path, original_name)]."""
+    """Ensure every Drive file exists locally; return [(path, original_name)].
+
+    Primary source: curated scripts/drive_files.json (exact id+name pairs,
+    immune to Drive's shifting listing markup). Fallback: live listing.
+    """
     os.makedirs(niche_raw, exist_ok=True)
     rep = REPORT["niches"][niche] = {}
+    index_path = os.path.join(os.path.dirname(__file__), "drive_files.json")
+    entries = []
+    try:
+        with open(index_path) as f:
+            entries = json.load(f).get(niche, [])
+    except OSError:
+        pass
+    rep["index_entries"] = len(entries)
+
+    if entries:
+        REPORT["engine"] = "curated-index+urllib"
+        got = []
+        for fid, name in sorted(entries, key=lambda e: e[1].lower()):
+            ext = os.path.splitext(name)[1].lower() or ".bin"
+            raw = os.path.join(niche_raw, f"{fid}{ext}")
+            if not (os.path.exists(raw) and os.path.getsize(raw) > 512):
+                ok, err = download_one(fid, raw)
+                if not ok:
+                    rep.setdefault("download_errors", []).append({"file": name, "err": err[:220]})
+                    continue
+            if ext in (VIDEO_EXT | IMAGE_EXT):
+                got.append((raw, name))
+        rep["collected"] = len(got)
+        if "download_errors" in rep:
+            rep["download_errors"] = rep["download_errors"][:12]
+        return got
+
+    # ---------- live-listing fallback ----------
     names = {}
     if YTDLP:
         REPORT["engine"] = "yt-dlp"
@@ -241,7 +273,7 @@ def collect_raw(niche, folder_id, niche_raw):
                     if not (os.path.exists(raw) and os.path.getsize(raw) > 512):
                         ok, err = download_one(fid, raw)
                         if not ok:
-                            rep.setdefault("download_errors", []).append({"file": name, "err": err[:200]})
+                            rep.setdefault("download_errors", []).append({"file": name, "err": err[:220]})
                             continue
                     if ext in (VIDEO_EXT | IMAGE_EXT):
                         got.append((raw, name))
@@ -252,7 +284,7 @@ def collect_raw(niche, folder_id, niche_raw):
     rep["collected"] = len(got)
     if "download_errors" in rep:
         rep["download_errors"] = rep["download_errors"][:12]
-    return sorted(got, key=lambda g: g[0].lower())
+    return got
 
 
 def main():
