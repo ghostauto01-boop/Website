@@ -1,0 +1,41 @@
+{
+  "engine": "embeddedfolderview+urllib (fallback)",
+  "niches": {
+    "jewelry": {
+      "ytdlp_log": "[GoogleDrive:Folder] Extracting URL: https://drive.google.com/drive/folders/1dch6Dhp5HvD9tb3N0uQZyb-6ZTKmN3Ud\n[GoogleDrive:Folder] 1dch6Dhp5HvD9tb3N0uQZyb-6ZTKmN3Ud: Downloading webpage\n[GoogleDrive:Folder] 1dch6Dhp5HvD9tb3N0uQZyb-6ZTKmN3Ud: Downloading webpage\nERROR: expected string or bytes-like object, got 'bool'\n",
+      "yt_dlp_files": 0,
+      "listed": 24,
+      "listing_page_bytes": 20550,
+      "collected": 0,
+      "done": {
+        "videos": 0,
+        "images": 0
+      }
+    },
+    "perfume": {
+      "ytdlp_log": "[GoogleDrive:Folder] Extracting URL: https://drive.google.com/drive/folders/11NXv2iHZjgOa8t8iMDpHN-CzFiuKppzy\n[GoogleDrive:Folder] 11NXv2iHZjgOa8t8iMDpHN-CzFiuKppzy: Downloading webpage\n[GoogleDrive:Folder] 11NXv2iHZjgOa8t8iMDpHN-CzFiuKppzy: Downloading webpage\nERROR: expected string or bytes-like object, got 'bool'\n",
+      "yt_dlp_files": 0,
+      "listed": 35,
+      "listing_page_bytes": 29334,
+      "collected": 0,
+      "done": {
+        "videos": 0,
+        "images": 0
+      }
+    },
+    "streetwear": {
+      "ytdlp_log": "[GoogleDrive:Folder] Extracting URL: https://drive.google.com/drive/folders/1gQPmjRRBabsHW_06xBI1noqeLogW-P7N\n[GoogleDrive:Folder] 1gQPmjRRBabsHW_06xBI1noqeLogW-P7N: Downloading webpage\n[GoogleDrive:Folder] 1gQPmjRRBabsHW_06xBI1noqeLogW-P7N: Downloading webpage\nERROR: expected string or bytes-like object, got 'bool'\n",
+      "yt_dlp_files": 0,
+      "listed": 47,
+      "listing_page_bytes": 39147,
+      "collected": 0,
+      "done": {
+        "videos": 0,
+        "images": 0
+      }
+    }
+  },
+  "started": "2026-07-22T08:29:19Z",
+  "total_processed": 0,
+  "finished": "2026-07-22T08:31:39Z"
+}
