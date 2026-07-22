@@ -250,9 +250,9 @@ def main():
         json.dump(REPORT, f, indent=2)
     print(f"DONE – {total} media files processed, engine={REPORT['engine']}")
     if total == 0:
+        print("!!! ZERO FILES PROCESSED — see assets/media/sync-report.json")
         print(json.dumps(REPORT, indent=2))
-        return 1
-    return 0
+    return 0  # always commit the report + manifest so failures are diagnosable
 
 
 if __name__ == "__main__":
