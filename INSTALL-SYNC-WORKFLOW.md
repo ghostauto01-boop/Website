@@ -13,11 +13,13 @@ Your Netlify deploy will then be instant (no build-time downloading).
 1. Open the repo: **https://github.com/ghostauto01-boop/Website**
 2. Switch to the branch **`arena/019f850c-website`** (dropdown near the top-left, currently showing `main` or your branch).
 3. Click **Add file → Create new file**.
-4. In the filename box, type exactly this path:
+4. In the filename box, type **exactly** this path — watch that it **starts with a dot** and **ends with a lowercase** `.yml`:
    ```
    .github/workflows/sync-media.yml
    ```
-   (GitHub turns `/` into folders automatically.)
+   ✔ Correct: `.github/workflows/sync-media.yml`
+   ✘ Wrong: `github/workflows/sync-media.ym`, `github/workflows/sync-media.Yml`
+   After typing, the breadcrumb above the editor must show **`.github / workflows / sync-media.yml`** with the dot visible. If a wrong copy already exists at `github/workflows/`, you can delete it afterwards (open it → `⋯` menu → **Delete file** → commit).
 5. Open **`ci/sync-media.yml`** in this repo (same branch), click **Raw**, select **all** (Ctrl/Cmd+A), copy it.
 6. Paste into the new file editor.
 7. Scroll down → **Commit changes… → Commit directly to the `arena/019f850c-website` branch → Commit changes**.
