@@ -6,6 +6,11 @@
       "yt_dlp_files": 0,
       "listed": 24,
       "listing_page_bytes": 20550,
+      "sample_names": [
+        "1haarydHHjX3P_5CBgf-ZyuqtPOHkqTuS",
+        "1yEMwBXZWNPTeVgIr3EyPN67plz9M4aC0",
+        "1avf6fAclZNhfs9r6921-D_RWVaKcBy-J"
+      ],
       "collected": 0,
       "done": {
         "videos": 0,
@@ -16,7 +21,12 @@
       "ytdlp_log": "[GoogleDrive:Folder] Extracting URL: https://drive.google.com/drive/folders/11NXv2iHZjgOa8t8iMDpHN-CzFiuKppzy\n[GoogleDrive:Folder] 11NXv2iHZjgOa8t8iMDpHN-CzFiuKppzy: Downloading webpage\n[GoogleDrive:Folder] 11NXv2iHZjgOa8t8iMDpHN-CzFiuKppzy: Downloading webpage\nERROR: expected string or bytes-like object, got 'bool'\n",
       "yt_dlp_files": 0,
       "listed": 35,
-      "listing_page_bytes": 29334,
+      "listing_page_bytes": 29369,
+      "sample_names": [
+        "1nYel4a2xTDpnCrLCnN89p8m9Z8G1DR6f",
+        "1xVpPQ7kDGMDSx2lrNaOgVz9TQwM8ExeC",
+        "1sx7IwUUrQ9mNBKJzOo1tqbChXns5F-Cq"
+      ],
       "collected": 0,
       "done": {
         "videos": 0,
@@ -27,7 +37,12 @@
       "ytdlp_log": "[GoogleDrive:Folder] Extracting URL: https://drive.google.com/drive/folders/1gQPmjRRBabsHW_06xBI1noqeLogW-P7N\n[GoogleDrive:Folder] 1gQPmjRRBabsHW_06xBI1noqeLogW-P7N: Downloading webpage\n[GoogleDrive:Folder] 1gQPmjRRBabsHW_06xBI1noqeLogW-P7N: Downloading webpage\nERROR: expected string or bytes-like object, got 'bool'\n",
       "yt_dlp_files": 0,
       "listed": 47,
-      "listing_page_bytes": 39147,
+      "listing_page_bytes": 39194,
+      "sample_names": [
+        "1q1K0gyMo2op_llpmIakbeBiO1ouOCvvS",
+        "18cafrlMppAwAoQm3muK1Lz6ggG32rgZY",
+        "1O-_-jwfV5LhW0woh85nej06K8Sxc1Gh1"
+      ],
       "collected": 0,
       "done": {
         "videos": 0,
@@ -35,7 +50,7 @@
       }
     }
   },
-  "started": "2026-07-22T08:29:19Z",
+  "started": "2026-07-22T08:34:17Z",
   "total_processed": 0,
-  "finished": "2026-07-22T08:31:39Z"
+  "finished": "2026-07-22T08:36:30Z"
 }
