@@ -1,0 +1,33 @@
+{
+  "engine": "curated-index+urllib",
+  "niches": {
+    "jewelry": {
+      "index_entries": 24,
+      "collected": 24,
+      "done": {
+        "videos": 5,
+        "images": 19
+      }
+    },
+    "perfume": {
+      "index_entries": 35,
+      "collected": 35,
+      "done": {
+        "videos": 16,
+        "images": 19
+      }
+    },
+    "streetwear": {
+      "index_entries": 47,
+      "collected": 47,
+      "done": {
+        "videos": 24,
+        "images": 23
+      }
+    }
+  },
+  "started": "2026-07-22T10:12:28Z",
+  "ffmpeg": "imageio-ffmpeg:/opt/hostedtoolcache/Python/3.14.6/x64/lib/python3.14/site-packages/imageio_ffmpeg/binaries/ffmpeg-linux-x86_64-v7.0.2",
+  "total_processed": 106,
+  "finished": "2026-07-22T10:14:23Z"
+}

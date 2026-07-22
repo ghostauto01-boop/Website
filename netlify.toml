@@ -1,0 +1,53 @@
+# CREATEBYMOH — static portfolio deploy config
+[build]
+  command = "bash scripts/build_site.sh"
+  publish = "."
+
+[[redirects]]
+  from = "/perfumes"
+  to = "/perfumes/"
+  status = 301
+
+[[redirects]]
+  from = "/streetwear"
+  to = "/streetwear/"
+  status = 301
+
+[[redirects]]
+  from = "/jewelry"
+  to = "/jewelry/"
+  status = 301
+
+[[redirects]]
+  from = "/how-we-work"
+  to = "/how-we-work/"
+  status = 301
+
+[[redirects]]
+  from = "/about"
+  to = "/about/"
+  status = 301
+
+# Content-hashed media (videos/posters/images) — safe to cache forever.
+[[headers]]
+  for = "/assets/media/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Site metadata — short cache so new campaigns show up quickly.
+[[headers]]
+  for = "/assets/manifest.json"
+  [headers.values]
+    Cache-Control = "public, max-age=120"
+
+# Code + favicon — fast repeat visits, still picks up edits within 30 min.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=1800"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
