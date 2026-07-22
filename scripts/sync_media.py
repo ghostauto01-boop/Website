@@ -84,28 +84,84 @@ def list_folder_embed(folder_id):
     return files, len(data)
 
 
+import http.cookiejar
+_JAR = http.cookiejar.CookieJar()
+_OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_JAR))
+
+
+def _stream_to(resp, dest, expect_html_fail=True):
+    with open(dest, "wb") as f:
+        head = resp.read(512)
+        if expect_html_fail and head.lstrip()[:5].lower() in (b"<html", b"<!doc"):
+            raise RuntimeError("HTML error page instead of file")
+        f.write(head)
+        while True:
+            chunk = resp.read(1 << 20)
+            if not chunk:
+                break
+            f.write(chunk)
+    return os.path.getsize(dest) > 512
+
+
 def download_one(fid, dest, attempts=3):
-    urls = [
-        f"https://drive.usercontent.google.com/download?id={fid}&export=download&confirm=t",
-        f"https://drive.google.com/uc?export=download&confirm=t&id={fid}",
-    ]
+    """Robust Drive download: cookie-aware confirm flow + plain endpoints."""
+    def _get(url):
+        return _OPENER.open(urllib.request.Request(url, headers=UA), timeout=300)
+
+    last_err = "no-attempt"
     for attempt in range(attempts):
+        if attempt:
+            time.sleep(2 * attempt)
         try:
-            with http_get(urls[attempt % 2], timeout=300) as r, open(dest, "wb") as f:
-                head = r.read(512)
-                if head.lstrip()[:5].lower() in (b"<html", b"<!doc"):
-                    raise RuntimeError("received HTML error page")
-                f.write(head)
-                while True:
-                    chunk = r.read(1 << 20)
-                    if not chunk:
-                        break
-                    f.write(chunk)
-            if os.path.getsize(dest) > 512:
-                return True
-        except (urllib.error.URLError, RuntimeError, TimeoutError) as e:
-            time.sleep(2 * (attempt + 1))
-    return False
+            # classic uc flow with cookie confirm handling
+            r = _get(f"https://drive.google.com/uc?export=download&id={fid}")
+            first = r.read(4096)
+            if first.lstrip()[:5].lower() in (b"<html", b"<!doc"):
+                m = re.search(rb'href="(/uc\?export=download[^"]+)"', first) or \
+                    re.search(rb'confirm=([0-9A-Za-z_\-]+)[^0-9A-Za-z_\-]', first)
+                token = m.group(1)
+                url = ("https://drive.google.com" + token.decode(errors="replace")).replace("&amp;", "&") \
+                    if str(token).startswith("b'/uc") else \
+                    f"https://drive.google.com/uc?export=download&id={fid}&confirm={token.decode(errors='replace')}"
+                with open(dest, "wb") as f:
+                    f.write(first)
+                r2 = _get(url)
+                if _stream_to(r2, dest):
+                    return True, "ok"
+            else:
+                with open(dest, "wb") as f:
+                    f.write(first)
+                    while True:
+                        chunk = r.read(1 << 20)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                if os.path.getsize(dest) > 512:
+                    return True, "ok"
+            last_err = "uc flow: small/empty body"
+        except Exception as e:
+            last_err = f"uc: {e!r}"
+        try:
+            if _stream_to(_get(f"https://drive.usercontent.google.com/download?id={fid}&export=download&confirm=t"), dest):
+                return True, "ok"
+            last_err = "usercontent: small/empty body"
+        except Exception as e:
+            last_err = f"usercontent: {e!r}"
+        try:
+            # last resort: yt-dlp single-file extractor
+            rr = sh(["yt-dlp", "-o", dest, "--no-warnings", "--retries", "1",
+                     f"https://drive.google.com/file/d/{fid}/view"], capture=True)
+            if os.path.exists(dest) and os.path.getsize(dest) > 512:
+                return True, "ok"
+            last_err = f"ytdlp-single: {(rr.stderr or rr.stdout or '')[-160:]}"
+        except Exception as e:
+            last_err = f"ytdlp-single: {e!r}"
+    if os.path.exists(dest):
+        try:
+            os.remove(dest)
+        except OSError:
+            pass
+    return False, last_err
 
 
 def run_ff(cmd):
@@ -177,18 +233,25 @@ def collect_raw(niche, folder_id, niche_raw):
             files, page_len = list_folder_embed(folder_id)
             rep["listed"] = len(files)
             rep["listing_page_bytes"] = page_len
+            rep["sample_names"] = [n for _, n in files[:3]]
             for fid, name in sorted(files, key=lambda x: x[1].lower()):
-                ext = os.path.splitext(name)[1].lower() or ".bin"
-                raw = os.path.join(niche_raw, f"{fid}{ext}")
-                if not (os.path.exists(raw) and os.path.getsize(raw) > 512):
-                    if not download_one(fid, raw):
-                        rep.setdefault("download_failures", []).append(name)
-                        continue
-                if ext in (VIDEO_EXT | IMAGE_EXT):
-                    got.append((raw, name))
+                try:
+                    ext = os.path.splitext(name)[1].lower() or ".bin"
+                    raw = os.path.join(niche_raw, f"{fid}{ext}")
+                    if not (os.path.exists(raw) and os.path.getsize(raw) > 512):
+                        ok, err = download_one(fid, raw)
+                        if not ok:
+                            rep.setdefault("download_errors", []).append({"file": name, "err": err[:200]})
+                            continue
+                    if ext in (VIDEO_EXT | IMAGE_EXT):
+                        got.append((raw, name))
+                except Exception as e:
+                    rep.setdefault("item_exceptions", []).append(f"{name}: {e!r}"[:240])
         except Exception as e:
             rep["listing_error"] = repr(e)
     rep["collected"] = len(got)
+    if "download_errors" in rep:
+        rep["download_errors"] = rep["download_errors"][:12]
     return sorted(got, key=lambda g: g[0].lower())
 
 
